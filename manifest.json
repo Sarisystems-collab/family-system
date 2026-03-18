@@ -1,0 +1,14 @@
+{
+  "name": "بيتنا — نظام العائلة",
+  "short_name": "بيتنا",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#7c3aed",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "https://via.placeholder.com/192x192/7c3aed/ffffff?text=🏠", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://via.placeholder.com/512x512/7c3aed/ffffff?text=🏠", "sizes": "512x512", "type": "image/png" }
+  ]
+}

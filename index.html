@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بيتنا — نظام العائلة</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#16213e;--card:#1e1e35;
+  --bor:#2d2d50;--fg:#e8e8f0;--mut:#8888aa;--sub:#5555aa;
+  --pri:#7c3aed;--sec:#a855f7;--acc:#f472b6;
+  --grn:#10b981;--red:#ef4444;--org:#f59e0b;--blu:#3b82f6;
+  --gold:#f59e0b;--r:14px;--sh:0 4px 24px #0008;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+
+/* ── Login ─────────────────────────────────────────────── */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:radial-gradient(ellipse at 40% 30%,#2d1b6930,#0f0f1a);
+}
+.login-box{
+  background:var(--card);border:1px solid var(--bor);border-radius:24px;
+  padding:40px 36px;width:100%;max-width:400px;box-shadow:var(--sh);
+}
+.login-logo{font-size:52px;text-align:center;margin-bottom:8px}
+.login-title{font-size:26px;font-weight:900;text-align:center;margin-bottom:4px;color:var(--fg)}
+.login-sub{font-size:13px;color:var(--mut);text-align:center;margin-bottom:28px}
+
+/* ── Layout ─────────────────────────────────────────────── */
+#app{display:none;flex-direction:row;min-height:100vh}
+nav{
+  width:72px;background:var(--bg2);border-left:1px solid var(--bor);
+  display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;
+  position:fixed;right:0;top:0;bottom:0;z-index:100;
+}
+.nav-icon{
+  width:48px;height:48px;border-radius:12px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;transition:all .2s;
+  font-size:20px;color:var(--mut);gap:2px;border:none;background:transparent;
+}
+.nav-icon:hover{background:var(--bor);color:var(--fg)}
+.nav-icon.active{background:linear-gradient(135deg,var(--pri),var(--sec));color:#fff;box-shadow:0 4px 12px #7c3aed44}
+.nav-icon span{font-size:9px;font-family:'Cairo',sans-serif}
+.nav-sep{width:40px;height:1px;background:var(--bor);margin:4px 0}
+main{margin-right:72px;flex:1;padding:24px;overflow-y:auto;min-height:100vh}
+
+/* ── Pages ──────────────────────────────────────────────── */
+.page{display:none}
+.page.active{display:block}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--bor);border-radius:var(--r);padding:20px}
+.card-sm{background:var(--card);border:1px solid var(--bor);border-radius:12px;padding:14px}
+.pg-title{font-size:22px;font-weight:900;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+/* ── Stat Cards ──────────────────────────────────────────── */
+.stat-card{
+  background:var(--card);border:1px solid var(--bor);border-radius:14px;
+  padding:18px;text-align:center;position:relative;overflow:hidden;
+}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--c,var(--pri))}
+.stat-val{font-size:28px;font-weight:900;color:var(--c,var(--pri));margin:4px 0}
+.stat-lbl{font-size:12px;color:var(--mut)}
+.stat-ico{font-size:28px;margin-bottom:6px}
+
+/* ── Forms ──────────────────────────────────────────────── */
+input,select,textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--bor);border-radius:10px;
+  padding:10px 14px;color:var(--fg);font-family:'Cairo',sans-serif;font-size:14px;outline:none;
+  transition:border-color .2s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--pri)}
+input::placeholder{color:var(--mut)}
+textarea{resize:vertical;min-height:80px}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px;font-weight:600}
+.form-row{margin-bottom:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn{
+  padding:9px 18px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;
+  transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:active{transform:scale(.97)}
+.btn-pri{background:linear-gradient(135deg,var(--pri),var(--sec));color:#fff;box-shadow:0 2px 10px #7c3aed44}
+.btn-grn{background:#10b98122;color:var(--grn);border:1px solid #10b98144}
+.btn-red{background:#ef444422;color:var(--red);border:1px solid #ef444444}
+.btn-org{background:#f59e0b22;color:var(--org);border:1px solid #f59e0b44}
+.btn-ghost{background:var(--bor);color:var(--fg)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px}
+
+/* ── Modal ───────────────────────────────────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:#0009;z-index:500;
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:var(--card);border:1px solid var(--bor);border-radius:20px;
+  padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  box-shadow:var(--sh);
+}
+.modal-title{font-size:17px;font-weight:900;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ── Member Cards ────────────────────────────────────────── */
+.member-card{
+  background:var(--card);border:1px solid var(--bor);border-radius:16px;padding:20px;
+  text-align:center;cursor:pointer;transition:all .2s;position:relative;
+}
+.member-card:hover{border-color:var(--pri);transform:translateY(-2px)}
+.member-card.selected{border-color:var(--pri);background:#7c3aed15}
+.member-avatar{font-size:48px;margin-bottom:10px}
+.member-name{font-size:15px;font-weight:700}
+.member-role{font-size:12px;color:var(--mut);margin-top:3px}
+.member-age{font-size:11px;color:var(--sub);margin-top:2px}
+
+/* ── Tags & Badges ────────────────────────────────────────── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-hi{background:#ef444422;color:var(--red);border:1px solid #ef444444}
+.badge-med{background:#f59e0b22;color:var(--org);border:1px solid #f59e0b44}
+.badge-lo{background:#10b98122;color:var(--grn);border:1px solid #10b98144}
+.badge-done{background:#10b98122;color:var(--grn)}
+.badge-pending{background:#f59e0b22;color:var(--org)}
+.badge-pri{background:#7c3aed22;color:var(--pri);border:1px solid #7c3aed44}
+
+/* ── List Items ──────────────────────────────────────────── */
+.list-item{
+  display:flex;align-items:center;gap:12px;padding:12px 0;
+  border-bottom:1px solid var(--bor);
+}
+.list-item:last-child{border-bottom:none}
+.list-item-icon{font-size:20px;width:36px;text-align:center}
+.list-item-body{flex:1}
+.list-item-title{font-size:14px;font-weight:700}
+.list-item-sub{font-size:12px;color:var(--mut);margin-top:2px}
+.list-item-actions{display:flex;gap:6px}
+
+/* ── Calendar ────────────────────────────────────────────── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-header{font-size:11px;color:var(--mut);font-weight:700;padding:6px 0}
+.cal-day{
+  aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-size:13px;cursor:pointer;
+  transition:all .15s;position:relative;
+}
+.cal-day:hover{background:var(--bor)}
+.cal-day.today{background:var(--pri);color:#fff;font-weight:900}
+.cal-day.has-event::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.cal-day.other-month{color:var(--sub)}
+
+/* ── Progress ────────────────────────────────────────────── */
+.progress-bar{background:var(--bor);border-radius:10px;height:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:10px;transition:width .5s}
+
+/* ── Shopping ────────────────────────────────────────────── */
+.shop-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bor)}
+.shop-item input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--pri)}
+.shop-item.bought span{text-decoration:line-through;color:var(--mut)}
+
+/* ── Meals ────────────────────────────────────────────────── */
+.meal-slot{
+  background:var(--bg3);border:1px dashed var(--bor);border-radius:10px;
+  padding:12px;cursor:pointer;transition:all .2s;min-height:60px;
+}
+.meal-slot:hover{border-color:var(--pri);background:#7c3aed10}
+.meal-slot.filled{border-style:solid;border-color:var(--pri);background:#7c3aed15}
+
+/* ── Notif ────────────────────────────────────────────────── */
+#notif{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--bor);border-radius:12px;
+  padding:12px 20px;font-size:13px;font-weight:700;z-index:9999;
+  transition:transform .3s;box-shadow:var(--sh);max-width:320px;text-align:center;
+}
+#notif.show{transform:translateX(-50%) translateY(0)}
+#notif.err{border-color:var(--red);color:var(--red)}
+#notif.ok{border-color:var(--grn);color:var(--grn)}
+
+/* ── Loader ──────────────────────────────────────────────── */
+.spin{width:24px;height:24px;border:3px solid var(--bor);border-top-color:var(--pri);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--mut);gap:12px}
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg3);padding:4px;border-radius:12px}
+.tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:var(--mut);border:none;background:transparent;font-family:'Cairo',sans-serif}
+.tab.active{background:var(--card);color:var(--fg);box-shadow:0 1px 4px #0004}
+
+/* ── Health ──────────────────────────────────────────────── */
+.med-card{
+  background:var(--bg3);border:1px solid var(--bor);border-radius:12px;
+  padding:14px;display:flex;align-items:center;gap:12px;
+}
+.med-icon{font-size:28px;width:44px;height:44px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center}
+
+/* ── Chart wrapper ───────────────────────────────────────── */
+.chart-wrap{position:relative;height:200px}
+
+/* ── Section headers ─────────────────────────────────────── */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sec-title{font-size:15px;font-weight:700}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty{text-align:center;padding:40px;color:var(--mut)}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty-text{font-size:14px}
+
+/* ── top bar ─────────────────────────────────────────────── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.topbar-title{font-size:22px;font-weight:900}
+.topbar-sub{font-size:12px;color:var(--mut);margin-top:2px}
+.topbar-user{display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pri),var(--sec));display:flex;align-items:center;justify-content:center;font-size:16px}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🏠</div>
+    <div class="login-title">بيتنا</div>
+    <div class="login-sub">نظام إدارة العائلة المتكامل</div>
+    <div class="form-row"><label>اسم المستخدم</label><input type="text" id="lu" placeholder="admin"></div>
+    <div class="form-row"><label>كلمة المرور</label><input type="password" id="lp" placeholder="••••••"></div>
+    <div id="lerr" style="display:none;color:var(--red);font-size:13px;margin-bottom:12px;padding:8px;background:#ef444415;border-radius:8px"></div>
+    <button class="btn btn-pri" style="width:100%;padding:12px" id="lbtn" onclick="doLogin()">دخول ←</button>
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--mut)">admin / admin123</div>
+  </div>
+</div>
+
+<!-- ══ APP ══════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Sidebar Nav -->
+  <nav>
+    <div style="font-size:22px;margin-bottom:12px">🏠</div>
+    <button class="nav-icon active" id="nav-dash"    onclick="showPage('dashboard',this)">🏡<span>الرئيسية</span></button>
+    <button class="nav-icon"        id="nav-members" onclick="showPage('members',this)">👨‍👩‍👧‍👦<span>العائلة</span></button>
+    <div class="nav-sep"></div>
+    <button class="nav-icon"        id="nav-inv"     onclick="showPage('inventory',this)">📦<span>المخزن</span></button>
+    <button class="nav-icon"        id="nav-shop"    onclick="showPage('shopping',this)">🛒<span>التسوق</span></button>
+    <button class="nav-icon"        id="nav-meals"   onclick="showPage('meals',this)">🍽️<span>الوجبات</span></button>
+    <div class="nav-sep"></div>
+    <button class="nav-icon"        id="nav-finance" onclick="showPage('finance',this)">💰<span>المالية</span></button>
+    <button class="nav-icon"        id="nav-tasks"   onclick="showPage('tasks',this)">📋<span>المهام</span></button>
+    <button class="nav-icon"        id="nav-cal"     onclick="showPage('calendar',this)">📅<span>الجدول</span></button>
+    <div class="nav-sep"></div>
+    <button class="nav-icon"        id="nav-health"  onclick="showPage('health',this)">🏥<span>الصحة</span></button>
+    <button class="nav-icon"        id="nav-school"  onclick="showPage('school',this)">📚<span>المدرسة</span></button>
+    <button class="nav-icon"        id="nav-docs"    onclick="showPage('documents',this)">📝<span>الوثائق</span></button>
+    <div style="flex:1"></div>
+    <button class="nav-icon"        onclick="showPage('settings',this)">⚙️<span>الإعدادات</span></button>
+    <button class="nav-icon"        onclick="doLogout()">🚪<span>خروج</span></button>
+  </nav>
+
+  <main>
+
+    <!-- ══ DASHBOARD ════════════════════════════════════ -->
+    <div id="page-dashboard" class="page active">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title" id="dash-greeting">صباح الخير 🌅</div>
+          <div class="topbar-sub" id="dash-date"></div>
+        </div>
+        <div class="topbar-user">
+          <div id="dash-user-name" style="font-size:13px;color:var(--mut)"></div>
+          <div class="user-avatar" id="dash-avatar">👤</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4" style="margin-bottom:20px" id="dash-stats">
+        <div class="stat-card" style="--c:var(--pri)"><div class="stat-ico">📋</div><div class="stat-val" id="ds-tasks">—</div><div class="stat-lbl">مهام معلقة</div></div>
+        <div class="stat-card" style="--c:var(--grn)"><div class="stat-ico">📦</div><div class="stat-val" id="ds-inv">—</div><div class="stat-lbl">أصناف المخزن</div></div>
+        <div class="stat-card" style="--c:var(--org)"><div class="stat-ico">💰</div><div class="stat-val" id="ds-budget">—</div><div class="stat-lbl">مصاريف الشهر</div></div>
+        <div class="stat-card" style="--c:var(--acc)"><div class="stat-ico">🏥</div><div class="stat-val" id="ds-appts">—</div><div class="stat-lbl">مواعيد قادمة</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:20px">
+        <!-- Today's events -->
+        <div class="card">
+          <div class="sec-hdr"><div class="sec-title">📅 أحداث اليوم</div><button class="btn btn-ghost btn-sm" onclick="showPage('calendar',document.getElementById('nav-cal'))">عرض الكل</button></div>
+          <div id="dash-events"><div class="loading"><div class="spin"></div></div></div>
+        </div>
+        <!-- Today's meals -->
+        <div class="card">
+          <div class="sec-hdr"><div class="sec-title">🍽️ وجبات اليوم</div><button class="btn btn-ghost btn-sm" onclick="showPage('meals',document.getElementById('nav-meals'))">تعديل</button></div>
+          <div id="dash-meals"><div class="loading"><div class="spin"></div></div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Tasks -->
+        <div class="card">
+          <div class="sec-hdr"><div class="sec-title">📋 المهام العاجلة</div><button class="btn btn-pri btn-sm" onclick="openAddTask()">+ إضافة</button></div>
+          <div id="dash-tasks"><div class="loading"><div class="spin"></div></div></div>
+        </div>
+        <!-- Low inventory -->
+        <div class="card">
+          <div class="sec-hdr"><div class="sec-title">⚠️ مخزون منخفض</div><button class="btn btn-ghost btn-sm" onclick="showPage('inventory',document.getElementById('nav-inv'))">المخزن</button></div>
+          <div id="dash-low-inv"><div class="loading"><div class="spin"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MEMBERS ═══════════════════════════════════════ -->
+    <div id="page-members" class="page">
+      <div class="sec-hdr pg-title">
+        <span>👨‍👩‍👧‍👦 أفراد العائلة</span>
+        <button class="btn btn-pri" onclick="openAddMember()">+ إضافة فرد</button>
+      </div>
+      <div class="grid-3" id="members-grid"></div>
+    </div>
+
+    <!-- ══ INVENTORY ═════════════════════════════════════ -->
+    <div id="page-inventory" class="page">
+      <div class="sec-hdr pg-title">
+        <span>📦 المخزون المنزلي</span>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="inv-search" placeholder="بحث..." style="width:180px" oninput="filterInventory()">
+          <button class="btn btn-pri" onclick="openAddInventory()">+ إضافة</button>
+        </div>
+      </div>
+      <div class="grid-4" style="margin-bottom:16px" id="inv-stats-row"></div>
+      <div class="card" id="inv-table-wrap">
+        <div id="inv-list"><div class="loading"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ SHOPPING ══════════════════════════════════════ -->
+    <div id="page-shopping" class="page">
+      <div class="sec-hdr pg-title">
+        <span>🛒 قوائم التسوق</span>
+        <button class="btn btn-pri" onclick="openAddList()">+ قائمة جديدة</button>
+      </div>
+      <div id="shopping-lists"><div class="loading"><div class="spin"></div></div></div>
+    </div>
+
+    <!-- ══ MEALS ══════════════════════════════════════════ -->
+    <div id="page-meals" class="page">
+      <div class="sec-hdr pg-title">
+        <span>🍽️ الوجبات والطبخ</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="prevWeek()">→</button>
+          <span id="week-label" style="font-size:14px;align-self:center;color:var(--mut)"></span>
+          <button class="btn btn-ghost" onclick="nextWeek()">←</button>
+          <button class="btn btn-pri" onclick="suggestMeals()">🤖 اقتراح AI</button>
+        </div>
+      </div>
+      <div id="meal-planner" style="margin-bottom:20px"></div>
+      <div class="sec-hdr" style="margin-top:20px"><div class="sec-title">📖 وصفاتي</div><button class="btn btn-pri btn-sm" onclick="openAddRecipe()">+ وصفة</button></div>
+      <div id="recipes-grid" class="grid-3"></div>
+    </div>
+
+    <!-- ══ FINANCE ════════════════════════════════════════ -->
+    <div id="page-finance" class="page">
+      <div class="sec-hdr pg-title">
+        <span>💰 الميزانية العائلية</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="month" id="fin-month" onchange="loadFinance()" style="width:160px">
+          <button class="btn btn-grn" onclick="openAddIncome()">+ دخل</button>
+          <button class="btn btn-red" onclick="openAddExpense()">+ مصروف</button>
+        </div>
+      </div>
+      <!-- Summary -->
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="stat-card" style="--c:var(--grn)"><div class="stat-ico">📥</div><div class="stat-val" id="fin-income">—</div><div class="stat-lbl">الدخل</div></div>
+        <div class="stat-card" style="--c:var(--red)"><div class="stat-ico">📤</div><div class="stat-val" id="fin-exp">—</div><div class="stat-lbl">المصاريف</div></div>
+        <div class="stat-card" style="--c:var(--org)" id="fin-balance-card"><div class="stat-ico">⚖️</div><div class="stat-val" id="fin-balance">—</div><div class="stat-lbl">الرصيد</div></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="sec-title" style="margin-bottom:14px">📊 الميزانية حسب الفئة</div>
+          <div id="budget-cats"></div>
+        </div>
+        <div class="card">
+          <div class="sec-title" style="margin-bottom:14px">📈 التوزيع</div>
+          <div class="chart-wrap"><canvas id="chart-budget"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="sec-hdr"><div class="sec-title">📤 المصاريف</div></div>
+          <div id="exp-list"></div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="sec-title">📥 الدخل</div></div>
+          <div id="inc-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TASKS ══════════════════════════════════════════ -->
+    <div id="page-tasks" class="page">
+      <div class="sec-hdr pg-title">
+        <span>📋 المهام</span>
+        <button class="btn btn-pri" onclick="openAddTask()">+ مهمة جديدة</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="filterTasks('all',this)">الكل</button>
+        <button class="tab" onclick="filterTasks('قيد التنفيذ',this)">جارية</button>
+        <button class="tab" onclick="filterTasks('مكتمل',this)">مكتملة</button>
+        <button class="tab" onclick="filterTasks('عالي',this)">عالية الأولوية</button>
+      </div>
+      <div id="tasks-list"><div class="loading"><div class="spin"></div></div></div>
+    </div>
+
+    <!-- ══ CALENDAR ═══════════════════════════════════════ -->
+    <div id="page-calendar" class="page">
+      <div class="sec-hdr pg-title">
+        <span>📅 الجدول العائلي</span>
+        <button class="btn btn-pri" onclick="openAddEvent()">+ حدث جديد</button>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <button class="btn btn-ghost btn-sm" onclick="prevMonth()">→</button>
+          <div style="font-size:16px;font-weight:700" id="cal-month-label"></div>
+          <button class="btn btn-ghost btn-sm" onclick="nextMonth()">←</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-header">أحد</div><div class="cal-header">اثنين</div>
+          <div class="cal-header">ثلاثاء</div><div class="cal-header">أربعاء</div>
+          <div class="cal-header">خميس</div><div class="cal-header">جمعة</div>
+          <div class="cal-header">سبت</div>
+        </div>
+        <div class="cal-grid" id="cal-days"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px" id="cal-selected-date">أحداث اليوم</div>
+        <div id="cal-events-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ HEALTH ═════════════════════════════════════════ -->
+    <div id="page-health" class="page">
+      <div class="pg-title">🏥 الصحة</div>
+      <div class="tabs">
+        <button class="tab active" onclick="showHealthTab('meds',this)">💊 الأدوية</button>
+        <button class="tab" onclick="showHealthTab('appts',this)">🗓️ المواعيد</button>
+      </div>
+      <!-- Medications -->
+      <div id="health-meds">
+        <div class="sec-hdr" style="margin-bottom:14px">
+          <div class="sec-title">الأدوية الحالية</div>
+          <button class="btn btn-pri btn-sm" onclick="openAddMed()">+ دواء</button>
+        </div>
+        <div id="meds-list"><div class="loading"><div class="spin"></div></div></div>
+      </div>
+      <!-- Appointments -->
+      <div id="health-appts" style="display:none">
+        <div class="sec-hdr" style="margin-bottom:14px">
+          <div class="sec-title">المواعيد القادمة</div>
+          <button class="btn btn-pri btn-sm" onclick="openAddAppt()">+ موعد</button>
+        </div>
+        <div id="appts-list"><div class="loading"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ SCHOOL ══════════════════════════════════════════ -->
+    <div id="page-school" class="page">
+      <div class="pg-title">📚 متابعة الأطفال</div>
+      <div class="grid-3" id="school-members" style="margin-bottom:20px"></div>
+      <div id="school-detail" style="display:none">
+        <div class="sec-hdr">
+          <div class="sec-title" id="school-member-name"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openAddActivity()">+ نشاط</button>
+            <button class="btn btn-pri btn-sm" onclick="openAddGrade()">+ درجة</button>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="sec-title" style="margin-bottom:12px">🎯 الدرجات</div>
+            <div id="grades-list"></div>
+          </div>
+          <div class="card">
+            <div class="sec-title" style="margin-bottom:12px">⚽ الأنشطة</div>
+            <div id="activities-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DOCUMENTS ═════════════════════════════════════ -->
+    <div id="page-documents" class="page">
+      <div class="sec-hdr pg-title">
+        <span>📝 الوثائق والملاحظات</span>
+        <button class="btn btn-pri" onclick="openAddDoc()">+ إضافة</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input type="text" id="doc-search" placeholder="بحث في الوثائق..." oninput="filterDocs()" style="flex:1">
+        <select id="doc-type-filter" onchange="filterDocs()" style="width:140px">
+          <option value="">الكل</option>
+          <option>ملاحظة</option><option>وثيقة</option><option>رقم مهم</option>
+        </select>
+      </div>
+      <div id="docs-grid" class="grid-3"></div>
+    </div>
+
+    <!-- ══ SETTINGS ═══════════════════════════════════════ -->
+    <div id="page-settings" class="page">
+      <div class="pg-title">⚙️ الإعدادات</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="sec-title" style="margin-bottom:14px">👤 حسابي</div>
+          <div class="form-row"><label>Telegram Chat ID</label><div style="display:flex;gap:8px"><input type="text" id="my-tg" placeholder="Chat ID"><button class="btn btn-ghost btn-sm" onclick="saveTg()">حفظ</button></div></div>
+          <div class="form-row"><label>كلمة مرور جديدة</label><input type="password" id="new-p1" placeholder="الحالية"></div>
+          <div class="form-row"><input type="password" id="new-p2" placeholder="الجديدة"></div>
+          <button class="btn btn-ghost" onclick="changePass()">تغيير كلمة المرور</button>
+        </div>
+        <div class="card" id="admin-section" style="display:none">
+          <div class="sec-hdr"><div class="sec-title">👥 المستخدمون</div><button class="btn btn-pri btn-sm" onclick="openAddUser()">+ مستخدم</button></div>
+          <div id="users-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODALS ════════════════════════════════════════════════ -->
+
+<!-- Member Modal -->
+<div class="modal-overlay" id="member-modal">
+  <div class="modal-box">
+    <div class="modal-title">👤 <span id="member-modal-title">إضافة فرد</span></div>
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <div style="text-align:center">
+        <div style="font-size:56px;cursor:pointer" id="avatar-preview" onclick="cycleMemberAvatar()">👤</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:4px">اضغط للتغيير</div>
+      </div>
+      <div style="flex:1">
+        <div class="form-row"><label>الاسم</label><input type="text" id="m-name" placeholder="اسم الفرد"></div>
+        <div class="form-row"><label>الصلة</label><select id="m-relation"><option>أب</option><option>أم</option><option>ابن</option><option>ابنة</option><option>جد</option><option>جدة</option><option>أخ</option><option>أخت</option><option>أخرى</option></select></div>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>تاريخ الميلاد</label><input type="date" id="m-birth"></div>
+      <div class="form-row"><label>فصيلة الدم</label><select id="m-blood"><option value="">غير محدد</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+    </div>
+    <div class="form-row"><label>رقم الهاتف</label><input type="tel" id="m-phone" placeholder="05xxxxxxxx"></div>
+    <div class="form-row"><label>ملاحظات</label><textarea id="m-notes" placeholder="أي معلومات إضافية..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMemberModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveMember()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inventory Modal -->
+<div class="modal-overlay" id="inv-modal">
+  <div class="modal-box">
+    <div class="modal-title">📦 <span id="inv-modal-title">إضافة صنف</span></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الاسم</label><input type="text" id="inv-name" placeholder="اسم الصنف"></div>
+      <div class="form-row"><label>الفئة</label><select id="inv-cat">
+        <option>طعام وشراب</option><option>منظفات</option><option>أدوات منزلية</option>
+        <option>مستلزمات شخصية</option><option>أدوية</option><option>أخرى</option>
+      </select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>الكمية</label><input type="number" id="inv-qty" min="0" placeholder="0"></div>
+      <div class="form-row"><label>الوحدة</label><input type="text" id="inv-unit" placeholder="قطعة، كيلو، لتر..."></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>الحد الأدنى</label><input type="number" id="inv-min" min="0" placeholder="1"></div>
+      <div class="form-row"><label>المكان</label><input type="text" id="inv-loc" placeholder="المطبخ، المخزن..."></div>
+    </div>
+    <div class="form-row"><label>تاريخ انتهاء الصلاحية</label><input type="date" id="inv-exp"></div>
+    <div class="form-row"><label>ملاحظات</label><input type="text" id="inv-notes" placeholder="اختياري"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeInvModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveInventory()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal-box">
+    <div class="modal-title">📋 مهمة جديدة</div>
+    <div class="form-row"><label>العنوان</label><input type="text" id="t-title" placeholder="وصف المهمة"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الأولوية</label><select id="t-priority"><option>عالي</option><option selected>متوسط</option><option>منخفض</option></select></div>
+      <div class="form-row"><label>الفئة</label><select id="t-cat"><option>منزلي</option><option>مشتريات</option><option>مدرسي</option><option>صحي</option><option>مالي</option><option>عام</option></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>تكليف لـ</label><select id="t-assigned"></select></div>
+      <div class="form-row"><label>الموعد النهائي</label><input type="date" id="t-due"></div>
+    </div>
+    <div class="form-row"><label>تفاصيل</label><textarea id="t-desc" placeholder="اختياري"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTaskModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveTask()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal-box">
+    <div class="modal-title">📅 حدث جديد</div>
+    <div class="form-row"><label>العنوان</label><input type="text" id="ev-title" placeholder="عنوان الحدث"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>التاريخ</label><input type="date" id="ev-date"></div>
+      <div class="form-row"><label>الوقت</label><input type="time" id="ev-time"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>النوع</label><select id="ev-type"><option>عام</option><option>مدرسي</option><option>طبي</option><option>اجتماعي</option><option>ديني</option></select></div>
+      <div class="form-row"><label>الفرد</label><select id="ev-member"></select></div>
+    </div>
+    <div class="form-row"><label>المكان</label><input type="text" id="ev-loc" placeholder="اختياري"></div>
+    <div class="form-row"><label>ملاحظات</label><textarea id="ev-notes"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEventModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveEvent()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shopping List Modal -->
+<div class="modal-overlay" id="list-modal">
+  <div class="modal-box">
+    <div class="modal-title">🛒 قائمة تسوق جديدة</div>
+    <div class="form-row"><label>اسم القائمة</label><input type="text" id="sl-name" placeholder="مثال: تسوق الأسبوع"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeListModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveList()">إنشاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Item to List Modal -->
+<div class="modal-overlay" id="shop-item-modal">
+  <div class="modal-box">
+    <div class="modal-title">➕ إضافة صنف للقائمة</div>
+    <input type="hidden" id="si-list-id">
+    <div class="form-row"><label>الصنف</label><input type="text" id="si-name" placeholder="اسم الصنف"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الكمية</label><input type="text" id="si-qty" placeholder="1" value="1"></div>
+      <div class="form-row"><label>الوحدة</label><input type="text" id="si-unit" placeholder="كيلو، علبة..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeShopItemModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveShopItem()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="exp-modal-title">💸 إضافة مصروف</div>
+    <div class="form-row"><label>المبلغ (ر.س)</label><input type="number" id="exp-amount" placeholder="0.00" step="0.01"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الفئة</label><select id="exp-cat"></select></div>
+      <div class="form-row"><label>التاريخ</label><input type="date" id="exp-date"></div>
+    </div>
+    <div class="form-row"><label>الوصف</label><input type="text" id="exp-desc" placeholder="اختياري"></div>
+    <div class="form-row"><label>دفع من</label><select id="exp-member"></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeExpModal()">إلغاء</button>
+      <button class="btn btn-pri" id="exp-save-btn" onclick="saveExpense()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Income Modal -->
+<div class="modal-overlay" id="income-modal">
+  <div class="modal-box">
+    <div class="modal-title">📥 إضافة دخل</div>
+    <div class="form-row"><label>المبلغ (ر.س)</label><input type="number" id="inc-amount" placeholder="0.00" step="0.01"></div>
+    <div class="form-row"><label>المصدر</label><input type="text" id="inc-source" placeholder="راتب، عمل حر..."></div>
+    <div class="form-grid">
+      <div class="form-row"><label>التاريخ</label><input type="date" id="inc-date"></div>
+      <div class="form-row"><label>الفرد</label><select id="inc-member"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeIncModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveIncome()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Med Modal -->
+<div class="modal-overlay" id="med-modal">
+  <div class="modal-box">
+    <div class="modal-title">💊 إضافة دواء</div>
+    <div class="form-row"><label>الفرد</label><select id="med-member"></select></div>
+    <div class="form-row"><label>اسم الدواء</label><input type="text" id="med-name" placeholder="اسم الدواء"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الجرعة</label><input type="text" id="med-dose" placeholder="مثال: حبة واحدة"></div>
+      <div class="form-row"><label>التكرار</label><select id="med-freq"><option>مرة يومياً</option><option>مرتين يومياً</option><option>3 مرات يومياً</option><option>عند الحاجة</option><option>أسبوعياً</option></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>بداية</label><input type="date" id="med-start"></div>
+      <div class="form-row"><label>نهاية (اختياري)</label><input type="date" id="med-end"></div>
+    </div>
+    <div class="form-row"><label>ملاحظات</label><textarea id="med-notes"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMedModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveMed()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Modal -->
+<div class="modal-overlay" id="appt-modal">
+  <div class="modal-box">
+    <div class="modal-title">🗓️ موعد طبي</div>
+    <div class="form-row"><label>الفرد</label><select id="appt-member"></select></div>
+    <div class="form-grid">
+      <div class="form-row"><label>اسم الطبيب</label><input type="text" id="appt-doctor" placeholder="د. ..."></div>
+      <div class="form-row"><label>التخصص</label><input type="text" id="appt-spec" placeholder="عام، أسنان..."></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>التاريخ</label><input type="date" id="appt-date"></div>
+      <div class="form-row"><label>الوقت</label><input type="time" id="appt-time"></div>
+    </div>
+    <div class="form-row"><label>المكان</label><input type="text" id="appt-loc" placeholder="اسم المستشفى أو العيادة"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeApptModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveAppt()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recipe Modal -->
+<div class="modal-overlay" id="recipe-modal">
+  <div class="modal-box">
+    <div class="modal-title">🍳 وصفة جديدة</div>
+    <div class="form-row"><label>اسم الوصفة</label><input type="text" id="rec-name" placeholder="اسم الوجبة"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الفئة</label><select id="rec-cat"><option>فطور</option><option selected>رئيسي</option><option>عشاء</option><option>حلويات</option><option>سلطة</option><option>مشروبات</option></select></div>
+      <div class="form-row"><label>وقت التحضير (دقيقة)</label><input type="number" id="rec-prep" placeholder="30"></div>
+    </div>
+    <div class="form-row"><label>المكونات (مكوّن في كل سطر)</label><textarea id="rec-ing" placeholder="2 كوب دقيق&#10;1 كوب حليب&#10;..."></textarea></div>
+    <div class="form-row"><label>طريقة التحضير</label><textarea id="rec-inst" style="min-height:100px" placeholder="1. ضعي الدقيق...&#10;2. أضيفي الحليب..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeRecipeModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveRecipe()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grade Modal -->
+<div class="modal-overlay" id="grade-modal">
+  <div class="modal-box">
+    <div class="modal-title">📊 إضافة درجة</div>
+    <div class="form-row"><label>المادة</label><input type="text" id="gr-subject" placeholder="رياضيات، عربي..."></div>
+    <div class="form-grid">
+      <div class="form-row"><label>الدرجة</label><input type="text" id="gr-grade" placeholder="95 أو A+"></div>
+      <div class="form-row"><label>الفصل</label><select id="gr-sem"><option>الفصل الأول</option><option>الفصل الثاني</option><option>الفصل الثالث</option></select></div>
+    </div>
+    <div class="form-row"><label>التاريخ</label><input type="date" id="gr-date"></div>
+    <div class="form-row"><label>ملاحظات</label><input type="text" id="gr-notes" placeholder="اختياري"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeGradeModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveGrade()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Modal -->
+<div class="modal-overlay" id="activity-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚽ إضافة نشاط</div>
+    <div class="form-row"><label>اسم النشاط</label><input type="text" id="act-name" placeholder="كرة قدم، رسم..."></div>
+    <div class="form-grid">
+      <div class="form-row"><label>اليوم</label><select id="act-day"><option>الأحد</option><option>الاثنين</option><option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option><option>السبت</option></select></div>
+      <div class="form-row"><label>الوقت</label><input type="time" id="act-time"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>المكان</label><input type="text" id="act-loc" placeholder="اختياري"></div>
+      <div class="form-row"><label>الرسوم (ر.س)</label><input type="number" id="act-fee" placeholder="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeActivityModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveActivity()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Modal -->
+<div class="modal-overlay" id="doc-modal">
+  <div class="modal-box">
+    <div class="modal-title">📝 <span id="doc-modal-title">وثيقة جديدة</span></div>
+    <div class="form-row"><label>العنوان</label><input type="text" id="doc-title" placeholder="عنوان الوثيقة"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>النوع</label><select id="doc-type"><option>ملاحظة</option><option>وثيقة</option><option>رقم مهم</option></select></div>
+      <div class="form-row"><label>خاص بـ</label><select id="doc-member"></select></div>
+    </div>
+    <div class="form-row"><label>المحتوى</label><textarea id="doc-content" style="min-height:120px" placeholder="المحتوى..."></textarea></div>
+    <div class="form-row"><label>وسوم (مفصولة بفاصلة)</label><input type="text" id="doc-tags" placeholder="مهم، صحة، مالي..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDocModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveDoc()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meal Picker Modal -->
+<div class="modal-overlay" id="meal-modal">
+  <div class="modal-box">
+    <div class="modal-title">🍽️ <span id="meal-modal-title">اختر الوجبة</span></div>
+    <input type="hidden" id="meal-date-pick">
+    <input type="hidden" id="meal-type-pick">
+    <div class="form-row"><label>وصفة من قائمتي</label><select id="meal-recipe-pick"><option value="">-- اختر وصفة --</option></select></div>
+    <div style="text-align:center;margin:12px 0;color:var(--mut);font-size:13px">أو</div>
+    <div class="form-row"><label>وجبة مخصصة</label><input type="text" id="meal-custom-pick" placeholder="مثال: مندي، معكرونة..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMealModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveMealPick()">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal-box">
+    <div class="modal-title">👤 مستخدم جديد</div>
+    <div class="form-grid">
+      <div class="form-row"><label>اسم المستخدم</label><input type="text" id="u-username"></div>
+      <div class="form-row"><label>كلمة المرور</label><input type="password" id="u-password"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>الاسم الكامل</label><input type="text" id="u-name"></div>
+      <div class="form-row"><label>الدور</label><select id="u-role"><option value="member">عضو</option><option value="admin">مدير</option><option value="child">طفل</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeUserModal()">إلغاء</button>
+      <button class="btn btn-pri" onclick="saveUser()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notif -->
+<div id="notif"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  Config — غيّر الرابط لـ Render
+// ═══════════════════════════════════════════════════════
+const API_URL = 'https://your-app.onrender.com';
+
+async function api(path, body, method) {
+  const m = method || (body !== undefined && body !== null ? 'POST' : 'GET');
+  try {
+    const r = await fetch(API_URL + path, {
+      method: m,
+      headers: { 'Content-Type': 'application/json', ...(TOKEN ? { 'Authorization': 'Bearer ' + TOKEN } : {}) },
+      body: (body !== undefined && body !== null) ? JSON.stringify(body) : null
+    });
+    return await r.json();
+  } catch(e) { return { error: e.message }; }
+}
+
+// ═══════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════
+let TOKEN = null, ME = null;
+let allMembers = [], allRecipes = [], allBudgetCats = [], allTasks = [], allEvents = [];
+let currentWeek = new Date(), calDate = new Date(), selectedSchoolMember = null;
+let editingDoc = null, editingMember = null;
+let chartBudget = null;
+const AVATARS = ['👨','👩','👦','👧','👴','👵','🧑','👶','🧒','👮','👷','💂','🧑‍⚕️','🧑‍🏫','🧑‍💼'];
+let avatarIdx = 0;
+
+// ═══════════════════════════════════════════════════════
+//  Login / Logout
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && !TOKEN) doLogin(); });
+
+async function doLogin() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  if (!u || !p) { showLE('أدخل بيانات الدخول'); return; }
+  const btn = document.getElementById('lbtn');
+  btn.disabled = true; btn.textContent = '...';
+  document.getElementById('lerr').style.display = 'none';
+  const r = await api('/api/login', { username: u, password: p });
+  btn.disabled = false; btn.textContent = 'دخول ←';
+  if (r.success) {
+    TOKEN = r.token; ME = r.user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  } else showLE(r.error || 'خطأ');
+}
+
+function showLE(m) { const e = document.getElementById('lerr'); e.textContent = m; e.style.display = 'block'; }
+
+async function doLogout() {
+  await api('/api/logout', {}, 'POST');
+  TOKEN = null; ME = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('lp').value = '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════
+async function initApp() {
+  // Greeting
+  const h = new Date().getHours();
+  const gr = h < 12 ? 'صباح الخير 🌅' : h < 17 ? 'مساء الخير ☀️' : 'مساء النور 🌙';
+  document.getElementById('dash-greeting').textContent = gr;
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('dash-user-name').textContent = ME.name;
+  if (ME.role === 'admin') document.getElementById('admin-section').style.display = '';
+  // Set month input
+  document.getElementById('fin-month').value = new Date().toISOString().substring(0, 7);
+  // Load base data
+  await Promise.all([loadMembers(), loadRecipes(), loadBudgetCats()]);
+  loadDashboard();
+}
+
+// ═══════════════════════════════════════════════════════
+//  Navigation
+// ═══════════════════════════════════════════════════════
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-icon').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  const loaders = {
+    inventory: loadInventory, shopping: loadShopping, finance: loadFinance,
+    tasks: loadTasks, calendar: ()=>{ buildCalendar(); loadCalEvents(); },
+    health: loadHealth, documents: loadDocuments, settings: loadSettings,
+    school: loadSchoolMembers, meals: loadMealPlanner
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+// ═══════════════════════════════════════════════════════
+//  Dashboard
+// ═══════════════════════════════════════════════════════
+async function loadDashboard() {
+  const d = await api('/api/dashboard');
+  if (!d || d.error) return;
+
+  // Stats
+  document.getElementById('ds-tasks').textContent = d.tasks.length;
+  document.getElementById('ds-inv').textContent   = d.lowInventory.length + ' منخفض';
+  document.getElementById('ds-appts').textContent = d.appointments.length;
+
+  // Events today
+  const evDiv = document.getElementById('dash-events');
+  evDiv.innerHTML = d.events.length ? d.events.map(e =>
+    `<div class="list-item"><div class="list-item-icon">📍</div><div class="list-item-body"><div class="list-item-title">${e.title}</div><div class="list-item-sub">${e.time || 'طوال اليوم'}${e.member_name ? ' · ' + e.member_name : ''}</div></div></div>`
+  ).join('') : '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">لا أحداث اليوم</div></div>';
+
+  // Today meals
+  const mDiv = document.getElementById('dash-meals');
+  const meals = ['فطور','غداء','عشاء'];
+  const mealMap = {};
+  d.todayMeals.forEach(m => { mealMap[m.meal_type] = m.recipe_name || m.custom || '—'; });
+  mDiv.innerHTML = meals.map(m =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bor);font-size:13px"><span style="color:var(--mut)">${m}</span><span style="font-weight:700">${mealMap[m] || '—'}</span></div>`
+  ).join('');
+
+  // Tasks
+  const tDiv = document.getElementById('dash-tasks');
+  tDiv.innerHTML = d.tasks.length ? d.tasks.map(t =>
+    `<div class="list-item"><div class="list-item-body"><div class="list-item-title">${t.title}</div><div class="list-item-sub">${t.assigned_name || 'غير محدد'} · ${t.due_date || 'بلا موعد'}</div></div><span class="badge badge-${t.priority==='عالي'?'hi':t.priority==='متوسط'?'med':'lo'}">${t.priority}</span></div>`
+  ).join('') : '<div class="empty"><div class="empty-text">✅ لا مهام معلقة</div></div>';
+
+  // Low inventory
+  const iDiv = document.getElementById('dash-low-inv');
+  iDiv.innerHTML = d.lowInventory.length ? d.lowInventory.map(i =>
+    `<div class="list-item"><div class="list-item-icon">📦</div><div class="list-item-body"><div class="list-item-title">${i.name}</div><div class="list-item-sub">المتبقي: ${i.quantity} | الحد: ${i.min_stock}</div></div></div>`
+  ).join('') : '<div class="empty"><div class="empty-text">✅ المخزن ممتاز</div></div>';
+
+  // Budget from finance
+  const fin = await api('/api/budget/summary?month=' + new Date().toISOString().substring(0,7));
+  if (fin && !fin.error) document.getElementById('ds-budget').textContent = fin.totalExp.toLocaleString('ar-SA') + ' ر.س';
+}
+
+// ═══════════════════════════════════════════════════════
+//  Members
+// ═══════════════════════════════════════════════════════
+async function loadMembers() {
+  const data = await api('/api/members');
+  allMembers = data || [];
+  renderMembers();
+  populateMemberSelects();
+}
+
+function renderMembers() {
+  const grid = document.getElementById('members-grid');
+  if (!grid) return;
+  if (!allMembers.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">👨‍👩‍👧‍👦</div><div class="empty-text">أضف أفراد عائلتك</div></div>'; return; }
+  grid.innerHTML = allMembers.map(m => {
+    const age = m.birthdate ? Math.floor((Date.now() - new Date(m.birthdate)) / (365.25*24*3600*1000)) : null;
+    return `<div class="member-card" onclick="viewMember(${m.id})">
+      <div style="position:absolute;top:10px;left:10px;display:flex;gap:4px">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();editMember(${m.id})" style="font-size:14px">✏️</button>
+        <button class="btn btn-red btn-icon btn-sm" onclick="event.stopPropagation();deleteMember(${m.id},'${m.name}')" style="font-size:14px">🗑️</button>
+      </div>
+      <div class="member-avatar">${m.avatar||'👤'}</div>
+      <div class="member-name">${m.name}</div>
+      <div class="member-role">${m.relation||''}</div>
+      ${age ? `<div class="member-age">${age} سنة</div>` : ''}
+      ${m.blood_type ? `<div style="margin-top:6px"><span class="badge badge-hi">${m.blood_type}</span></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function populateMemberSelects() {
+  const opts = '<option value="0">الكل</option>' + allMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  ['t-assigned','ev-member','med-member','appt-member','inc-member','exp-member','doc-member'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = opts;
+  });
+}
+
+function viewMember(id) { /* يمكن توسيع لعرض تفاصيل الفرد */ }
+
+function openAddMember() { editingMember = null; document.getElementById('member-modal-title').textContent = 'إضافة فرد'; ['m-name','m-phone','m-notes'].forEach(id => document.getElementById(id).value=''); document.getElementById('m-birth').value=''; document.getElementById('m-blood').value=''; avatarIdx = 0; document.getElementById('avatar-preview').textContent = AVATARS[0]; document.getElementById('member-modal').classList.add('open'); }
+
+function editMember(id) {
+  const m = allMembers.find(x => x.id == id); if (!m) return;
+  editingMember = id;
+  document.getElementById('member-modal-title').textContent = 'تعديل بيانات ' + m.name;
+  document.getElementById('m-name').value    = m.name;
+  document.getElementById('m-relation').value = m.relation || 'أب';
+  document.getElementById('m-birth').value   = m.birthdate || '';
+  document.getElementById('m-blood').value   = m.blood_type || '';
+  document.getElementById('m-phone').value   = m.phone || '';
+  document.getElementById('m-notes').value   = m.notes || '';
+  document.getElementById('avatar-preview').textContent = m.avatar || '👤';
+  document.getElementById('member-modal').classList.add('open');
+}
+
+function cycleMemberAvatar() { avatarIdx = (avatarIdx + 1) % AVATARS.length; document.getElementById('avatar-preview').textContent = AVATARS[avatarIdx]; }
+function closeMemberModal() { document.getElementById('member-modal').classList.remove('open'); editingMember = null; }
+
+async function saveMember() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { notify('الاسم مطلوب', true); return; }
+  const body = { name, relation: document.getElementById('m-relation').value, birthdate: document.getElementById('m-birth').value, bloodType: document.getElementById('m-blood').value, phone: document.getElementById('m-phone').value, notes: document.getElementById('m-notes').value, avatar: document.getElementById('avatar-preview').textContent };
+  closeMemberModal();
+  const r = editingMember ? await api('/api/members/' + editingMember, body, 'PUT') : await api('/api/members', body);
+  if (r.error) { notify(r.error, true); return; }
+  notify('تم الحفظ ✓'); loadMembers();
+}
+
+async function deleteMember(id, name) {
+  if (!confirm('حذف ' + name + '؟')) return;
+  const r = await api('/api/members/' + id, {}, 'DELETE');
+  if (r.error) { notify(r.error, true); return; }
+  notify('تم الحذف'); loadMembers();
+}
+
+// ═══════════════════════════════════════════════════════
+//  Inventory
+// ═══════════════════════════════════════════════════════
+let allInventory = [];
+async function loadInventory() {
+  const data = await api('/api/inventory');
+  allInventory = data || [];
+  renderInventory(allInventory);
+  const stats = await api('/api/inventory/stats');
+  if (stats && !stats.error) {
+    document.getElementById('inv-stats-row').innerHTML = `
+      <div class="stat-card" style="--c:var(--pri)"><div class="stat-ico">📦</div><div class="stat-val">${stats.total}</div><div class="stat-lbl">إجمالي الأصناف</div></div>
+      <div class="stat-card" style="--c:var(--red)"><div class="stat-ico">⚠️</div><div class="stat-val">${stats.low}</div><div class="stat-lbl">منخفض</div></div>
+      <div class="stat-card" style="--c:var(--org)"><div class="stat-ico">⏰</div><div class="stat-val">${stats.exp}</div><div class="stat-lbl">تنتهي قريباً</div></div>
+      <div class="stat-card" style="--c:var(--grn)"><div class="stat-ico">🏠</div><div class="stat-val">${Object.keys(stats.byLoc||{}).length}</div><div class="stat-lbl">أماكن</div></div>`;
+  }
+}
+
+function renderInventory(items) {
+  const div = document.getElementById('inv-list');
+  if (!items.length) { div.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">لا توجد أصناف</div></div>'; return; }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const soon  = new Date(today); soon.setDate(soon.getDate()+7);
+  div.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="font-size:12px;color:var(--mut);border-bottom:1px solid var(--bor)">${['الصنف','الفئة','الكمية','المكان','الصلاحية',''].map(h=>`<th style="text-align:right;padding:8px">${h}</th>`).join('')}</tr></thead>
+    <tbody>${items.map(i => {
+      const exp = i.expiry ? new Date(i.expiry) : null;
+      const expClass = exp ? (exp < today ? 'color:var(--red)' : exp <= soon ? 'color:var(--org)' : '') : '';
+      const lowBg = +i.quantity <= +i.min_stock ? 'background:#ef444410;' : '';
+      return `<tr style="${lowBg}border-bottom:1px solid var(--bor);font-size:13px">
+        <td style="padding:10px 8px;font-weight:700">${i.name}</td>
+        <td style="padding:8px;color:var(--mut)">${i.category}</td>
+        <td style="padding:8px"><span style="font-weight:700;${+i.quantity<=+i.min_stock?'color:var(--red)':''}">${i.quantity}</span> ${i.unit}</td>
+        <td style="padding:8px;color:var(--mut)">${i.location||'—'}</td>
+        <td style="padding:8px;${expClass}">${i.expiry||'—'}</td>
+        <td style="padding:8px"><div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="editInventory(${i.id})">✏️</button>
+          <button class="btn btn-red btn-icon btn-sm" onclick="deleteInventory(${i.id},'${i.name}')">🗑️</button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+function filterInventory() {
+  const q = document.getElementById('inv-search').value.toLowerCase();
+  renderInventory(allInventory.filter(i => i.name.toLowerCase().includes(q) || (i.category||'').toLowerCase().includes(q)));
+}
+
+let editingInv = null;
+function openAddInventory() { editingInv = null; document.getElementById('inv-modal-title').textContent = 'إضافة صنف'; ['inv-name','inv-unit','inv-loc','inv-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('inv-qty').value='0'; document.getElementById('inv-min').value='1'; document.getElementById('inv-exp').value=''; document.getElementById('inv-modal').classList.add('open'); }
+
+function editInventory(id) {
+  const i = allInventory.find(x => x.id == id); if (!i) return;
+  editingInv = id;
+  document.getElementById('inv-modal-title').textContent = 'تعديل: ' + i.name;
+  document.getElementById('inv-name').value = i.name;
+  document.getElementById('inv-cat').value  = i.category;
+  document.getElementById('inv-qty').value  = i.quantity;
+  document.getElementById('inv-unit').value = i.unit;
+  document.getElementById('inv-min').value  = i.min_stock;
+  document.getElementById('inv-loc').value  = i.location;
+  document.getElementById('inv-exp').value  = i.expiry;
+  document.getElementById('inv-notes').value= i.notes;
+  document.getElementById('inv-modal').classList.add('open');
+}
+
+function closeInvModal() { document.getElementById('inv-modal').classList.remove('open'); editingInv = null; }
+
+async function saveInventory() {
+  const name = document.getElementById('inv-name').value.trim();
+  if (!name) { notify('الاسم مطلوب', true); return; }
+  const body = { name, category: document.getElementById('inv-cat').value, quantity: document.getElementById('inv-qty').value, unit: document.getElementById('inv-unit').value||'قطعة', minStock: document.getElementById('inv-min').value, location: document.getElementById('inv-loc').value, expiry: document.getElementById('inv-exp').value, notes: document.getElementById('inv-notes').value };
+  closeInvModal();
+  const r = editingInv ? await api('/api/inventory/' + editingInv, body, 'PUT') : await api('/api/inventory', body);
+  if (r.error) { notify(r.error, true); return; }
+  notify('تم الحفظ ✓'); loadInventory();
+}
+
+async function deleteInventory(id, name) {
+  if (!confirm('حذف ' + name + '؟')) return;
+  await api('/api/inventory/' + id, {}, 'DELETE');
+  notify('تم الحذف'); loadInventory();
+}
+
+// ═══════════════════════════════════════════════════════
+//  Shopping Lists
+// ═══════════════════════════════════════════════════════
+async function loadShopping() {
+  const data = await api('/api/shopping');
+  const div  = document.getElementById('shopping-lists');
+  if (!data || !data.length) { div.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">لا توجد قوائم تسوق</div></div>'; return; }
+  div.innerHTML = data.map(list => {
+    const items  = list.items || [];
+    const bought = items.filter(i => i.bought).length;
+    return `<div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div><div style="font-size:16px;font-weight:900">${list.name}</div><div style="font-size:12px;color:var(--mut)">${bought}/${items.length} مكتمل</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-pri btn-sm" onclick="openAddShopItem(${list.id})">+ إضافة</button>
+          <button class="btn btn-red btn-sm" onclick="deleteList(${list.id},'${list.name}')">🗑️</button>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div class="progress-bar"><div class="progress-fill" style="background:var(--grn);width:${items.length?bought/items.length*100:0}%"></div></div>
+      </div>
+      ${items.map(i => `
+        <div class="shop-item ${i.bought?'bought':''}">
+          <input type="checkbox" ${i.bought?'checked':''} onchange="toggleItem(${i.id})">
+          <span style="flex:1">${i.name}${i.quantity&&i.quantity!='1'?' — '+i.quantity+' '+i.unit:''}</span>
+          <button class="btn btn-red btn-icon btn-sm" onclick="deleteShopItem(${i.id})">✕</button>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function openAddList() { document.getElementById('sl-name').value = ''; document.getElementById('list-modal').classList.add('open'); }
+function closeListModal() { document.getElementById('list-modal').classList.remove('open'); }
+async function saveList() { const n = document.getElementById('sl-name').value.trim(); if (!n) return; closeListModal(); await api('/api/shopping/lists', { name: n }); loadShopping(); }
+
+function openAddShopItem(listId) { document.getElementById('si-list-id').value = listId; document.getElementById('si-name').value = ''; document.getElementById('si-qty').value = '1'; document.getElementById('si-unit').value = ''; document.getElementById('shop-item-modal').classList.add('open'); }
+function closeShopItemModal() { document.getElementById('shop-item-modal').classList.remove('open'); }
+async function saveShopItem() { const n = document.getElementById('si-name').value.trim(); if (!n) return; closeShopItemModal(); await api('/api/shopping/items', { listId: document.getElementById('si-list-id').value, name: n, quantity: document.getElementById('si-qty').value, unit: document.getElementById('si-unit').value }); loadShopping(); }
+async function toggleItem(id) { await api('/api/shopping/items/' + id + '/toggle', {}); loadShopping(); }
+async function deleteShopItem(id) { await api('/api/shopping/items/' + id, {}, 'DELETE'); loadShopping(); }
+async function deleteList(id, name) { if (!confirm('حذف قائمة ' + name + '؟')) return; await api('/api/shopping/lists/' + id, {}, 'DELETE'); loadShopping(); }
+
+// ═══════════════════════════════════════════════════════
+//  Meals & Recipes
+// ═══════════════════════════════════════════════════════
+async function loadRecipes() { const d = await api('/api/recipes'); allRecipes = d || []; }
+
+function getWeekStart(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay()); dt.setHours(0,0,0,0); return dt; }
+
+async function loadMealPlanner() {
+  const weekStart = getWeekStart(currentWeek);
+  const weekEnd   = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+  const ws = weekStart.toISOString().split('T')[0];
+  const we = weekEnd.toISOString().split('T')[0];
+  document.getElementById('week-label').textContent = ws + ' ← ' + we;
+  const data = await api('/api/meals?week=' + ws);
+  const mealMap = {};
+  (data || []).forEach(m => { mealMap[m.date + '_' + m.meal_type] = m; });
+  const days = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  const meals = ['فطور','غداء','عشاء'];
+  const today = new Date().toISOString().split('T')[0];
+  let html = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">
+    <thead><tr><th style="padding:10px;color:var(--mut);font-size:12px;text-align:right">الوجبة</th>`;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(d.getDate() + i);
+    const ds = d.toISOString().split('T')[0];
+    html += `<th style="padding:10px;font-size:12px;${ds===today?'color:var(--pri);':''}">${days[d.getDay()]}<br><span style="font-weight:400;color:var(--mut)">${d.getDate()}/${d.getMonth()+1}</span></th>`;
+  }
+  html += '</tr></thead><tbody>';
+  meals.forEach(meal => {
+    html += `<tr><td style="padding:10px;font-size:13px;font-weight:700;color:var(--mut)">${meal}</td>`;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart); d.setDate(d.getDate() + i);
+      const ds = d.toISOString().split('T')[0];
+      const key = ds + '_' + meal;
+      const entry = mealMap[key];
+      const label = entry ? (entry.recipe_name || entry.custom) : '';
+      html += `<td style="padding:6px">
+        <div class="meal-slot ${label?'filled':''}" onclick="openMealPicker('${ds}','${meal}','${label.replace(/'/g,"\\'")}')" style="font-size:12px">
+          ${label || '<span style="color:var(--sub);font-size:11px">+ إضافة</span>'}
+        </div></td>`;
+    }
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('meal-planner').innerHTML = html;
+  renderRecipes();
+}
+
+function prevWeek() { currentWeek.setDate(currentWeek.getDate() - 7); loadMealPlanner(); }
+function nextWeek() { currentWeek.setDate(currentWeek.getDate() + 7); loadMealPlanner(); }
+
+function openMealPicker(date, mealType, current) {
+  document.getElementById('meal-modal-title').textContent = mealType + ' — ' + date;
+  document.getElementById('meal-date-pick').value = date;
+  document.getElementById('meal-type-pick').value = mealType;
+  document.getElementById('meal-custom-pick').value = current || '';
+  const sel = document.getElementById('meal-recipe-pick');
+  sel.innerHTML = '<option value="">-- اختر وصفة --</option>' + allRecipes.map(r => `<option value="${r.id}" data-name="${r.name}">${r.name}</option>`).join('');
+  document.getElementById('meal-modal').classList.add('open');
+}
+
+function closeMealModal() { document.getElementById('meal-modal').classList.remove('open'); }
+
+async function saveMealPick() {
+  const date     = document.getElementById('meal-date-pick').value;
+  const mealType = document.getElementById('meal-type-pick').value;
+  const recSel   = document.getElementById('meal-recipe-pick');
+  const custom   = document.getElementById('meal-custom-pick').value.trim();
+  const recipeId   = recSel.value;
+  const recipeName = recSel.options[recSel.selectedIndex]?.dataset.name || '';
+  closeMealModal();
+  await api('/api/meals', { date, mealType, recipeId, recipeName, custom });
+  loadMealPlanner();
+}
+
+function renderRecipes() {
+  const div = document.getElementById('recipes-grid');
+  if (!allRecipes.length) { div.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🍳</div><div class="empty-text">أضف وصفاتك</div></div>'; return; }
+  div.innerHTML = allRecipes.map(r => `
+    <div class="card-sm" style="cursor:default">
+      <div style="font-size:22px;margin-bottom:6px">${r.category==='فطور'?'🌅':r.category==='حلويات'?'🍰':r.category==='سلطة'?'🥗':'🍽️'}</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px">${r.name}</div>
+      <div style="font-size:12px;color:var(--mut)">${r.category} · ${r.prep_time||0} دقيقة</div>
+      <div style="margin-top:10px;display:flex;justify-content:flex-end">
+        <button class="btn btn-red btn-icon btn-sm" onclick="deleteRecipe(${r.id})">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+async function suggestMeals() {
+  notify('AI يقترح وجبات الأسبوع...');
+  const r = await api('/api/meals/suggest', {});
+  if (r.error) { notify(r.error, true); return; }
+  alert(r.suggestion);
+}
+
+function openAddRecipe() { ['rec-name','rec-ing','rec-inst'].forEach(id=>document.getElementById(id).value=''); document.getElementById('rec-prep').value=''; document.getElementById('recipe-modal').classList.add('open'); }
+function closeRecipeModal() { document.getElementById('recipe-modal').classList.remove('open'); }
+async function saveRecipe() {
+  const name = document.getElementById('rec-name').value.trim(); if (!name) return;
+  closeRecipeModal();
+  await api('/api/recipes', { name, category: document.getElementById('rec-cat').value, ingredients: document.getElementById('rec-ing').value.split('\n').filter(Boolean), instructions: document.getElementById('rec-inst').value, prepTime: document.getElementById('rec-prep').value });
+  await loadRecipes(); renderRecipes();
+}
+async function deleteRecipe(id) { if (!confirm('حذف الوصفة؟')) return; await api('/api/recipes/' + id, {}, 'DELETE'); await loadRecipes(); renderRecipes(); }
+
+// ═══════════════════════════════════════════════════════
+//  Finance
+// ═══════════════════════════════════════════════════════
+async function loadBudgetCats() { const d = await api('/api/budget/categories'); allBudgetCats = d || []; const sel = document.getElementById('exp-cat'); if (sel) sel.innerHTML = allBudgetCats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join(''); }
+
+async function loadFinance() {
+  const month = document.getElementById('fin-month').value;
+  const [summary, exps, incs] = await Promise.all([
+    api('/api/budget/summary?month=' + month),
+    api('/api/expenses?month=' + month),
+    api('/api/income?month=' + month)
+  ]);
+  if (summary && !summary.error) {
+    document.getElementById('fin-income').textContent  = summary.totalInc.toLocaleString('ar-SA') + ' ر.س';
+    document.getElementById('fin-exp').textContent     = summary.totalExp.toLocaleString('ar-SA') + ' ر.س';
+    document.getElementById('fin-balance').textContent = Math.abs(summary.balance).toLocaleString('ar-SA') + ' ر.س';
+    document.getElementById('fin-balance-card').style.setProperty('--c', summary.balance >= 0 ? 'var(--grn)' : 'var(--red)');
+    // Category bars
+    const catDiv = document.getElementById('budget-cats');
+    catDiv.innerHTML = summary.byCategory.map(c => {
+      const pct = c.budget > 0 ? Math.min(c.spent / c.budget * 100, 100) : 0;
+      const over = c.spent > c.budget && c.budget > 0;
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>${c.icon} ${c.name}</span>
+          <span style="color:${over?'var(--red)':'var(--mut)'}">${c.spent.toLocaleString('ar-SA')} / ${c.budget.toLocaleString('ar-SA')} ر.س</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="background:${over?'var(--red)':c.color||'var(--pri)'};width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+    // Chart
+    if (chartBudget) chartBudget.destroy();
+    const ctx = document.getElementById('chart-budget')?.getContext('2d');
+    if (ctx) {
+      chartBudget = new Chart(ctx, { type: 'doughnut', data: {
+        labels: summary.byCategory.map(c => c.name),
+        datasets: [{ data: summary.byCategory.map(c => c.spent), backgroundColor: summary.byCategory.map(c => c.color || '#6b7280'), borderWidth: 0 }]
+      }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8888aa', font: { family: 'Cairo' } } } }, cutout: '60%' } });
+    }
+  }
+  // Expenses list
+  const expDiv = document.getElementById('exp-list');
+  expDiv.innerHTML = (exps||[]).length ? (exps||[]).map(e => {
+    const cat = allBudgetCats.find(c => c.id == e.category_id);
+    return `<div class="list-item"><div class="list-item-icon">${cat?.icon||'💸'}</div><div class="list-item-body"><div class="list-item-title">${e.description||cat?.name||'مصروف'}</div><div class="list-item-sub">${e.date} · ${e.member_name||'—'}</div></div><div style="font-weight:700;color:var(--red)">${(+e.amount).toLocaleString('ar-SA')} ر.س</div><button class="btn btn-red btn-icon btn-sm" onclick="deleteExpense(${e.id})">✕</button></div>`;
+  }).join('') : '<div class="empty"><div class="empty-text">لا مصاريف</div></div>';
+  // Income list
+  const incDiv = document.getElementById('inc-list');
+  incDiv.innerHTML = (incs||[]).length ? (incs||[]).map(i =>
+    `<div class="list-item"><div class="list-item-icon">💵</div><div class="list-item-body"><div class="list-item-title">${i.source||'دخل'}</div><div class="list-item-sub">${i.date} · ${i.member_name||'—'}</div></div><div style="font-weight:700;color:var(--grn)">${(+i.amount).toLocaleString('ar-SA')} ر.س</div><button class="btn btn-red btn-icon btn-sm" onclick="deleteIncome(${i.id})">✕</button></div>`
+  ).join('') : '<div class="empty"><div class="empty-text">لا دخل مسجل</div></div>';
+}
+
+function openAddExpense() { document.getElementById('exp-amount').value=''; document.getElementById('exp-desc').value=''; document.getElementById('exp-date').value=new Date().toISOString().split('T')[0]; document.getElementById('exp-modal-title').textContent='💸 إضافة مصروف'; document.getElementById('expense-modal').classList.add('open'); }
+function openAddIncome()  { document.getElementById('inc-amount').value=''; document.getElementById('inc-source').value=''; document.getElementById('inc-date').value=new Date().toISOString().split('T')[0]; document.getElementById('income-modal').classList.add('open'); }
+function closeExpModal()  { document.getElementById('expense-modal').classList.remove('open'); }
+function closeIncModal()  { document.getElementById('income-modal').classList.remove('open'); }
+
+async function saveExpense() {
+  const amount = document.getElementById('exp-amount').value; if (!amount) return;
+  const memSel = document.getElementById('exp-member');
+  closeExpModal();
+  await api('/api/expenses', { amount, categoryId: document.getElementById('exp-cat').value, description: document.getElementById('exp-desc').value, date: document.getElementById('exp-date').value, memberId: memSel.value, memberName: memSel.options[memSel.selectedIndex]?.text||'' });
+  loadFinance();
+}
+
+async function saveIncome() {
+  const amount = document.getElementById('inc-amount').value; if (!amount) return;
+  const memSel = document.getElementById('inc-member');
+  closeIncModal();
+  await api('/api/income', { amount, source: document.getElementById('inc-source').value, date: document.getElementById('inc-date').value, memberId: memSel.value, memberName: memSel.options[memSel.selectedIndex]?.text||'' });
+  loadFinance();
+}
+
+async function deleteExpense(id) { await api('/api/expenses/' + id, {}, 'DELETE'); loadFinance(); }
+async function deleteIncome(id)  { await api('/api/income/' + id, {}, 'DELETE'); loadFinance(); }
+
+// ═══════════════════════════════════════════════════════
+//  Tasks
+// ═══════════════════════════════════════════════════════
+async function loadTasks() {
+  const data = await api('/api/tasks');
+  allTasks = data || [];
+  renderTasks(allTasks);
+}
+
+function renderTasks(tasks) {
+  const div = document.getElementById('tasks-list');
+  if (!tasks.length) { div.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">لا توجد مهام</div></div>'; return; }
+  div.innerHTML = tasks.map(t => `
+    <div class="card-sm" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;${t.status==='مكتمل'?'opacity:.6':''}">
+      <input type="checkbox" ${t.status==='مكتمل'?'checked':''} onchange="completeTask(${t.id})" style="width:18px;height:18px;accent-color:var(--pri)">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;${t.status==='مكتمل'?'text-decoration:line-through;':''}">${t.title}</div>
+        <div style="font-size:12px;color:var(--mut);margin-top:2px">${t.assigned_name||'غير محدد'}${t.due_date?' · '+t.due_date:''} · ${t.category}</div>
+      </div>
+      <span class="badge badge-${t.priority==='عالي'?'hi':t.priority==='متوسط'?'med':'lo'}">${t.priority}</span>
+      <button class="btn btn-red btn-icon btn-sm" onclick="deleteTask(${t.id})">🗑️</button>
+    </div>`).join('');
+}
+
+function filterTasks(filter, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (filter === 'all') renderTasks(allTasks);
+  else if (filter === 'عالي') renderTasks(allTasks.filter(t => t.priority === 'عالي'));
+  else renderTasks(allTasks.filter(t => t.status === filter));
+}
+
+function openAddTask() { ['t-title','t-desc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('t-due').value=''; document.getElementById('task-modal').classList.add('open'); }
+function closeTaskModal() { document.getElementById('task-modal').classList.remove('open'); }
+
+async function saveTask() {
+  const title = document.getElementById('t-title').value.trim(); if (!title) return;
+  const memSel = document.getElementById('t-assigned');
+  closeTaskModal();
+  await api('/api/tasks', { title, description: document.getElementById('t-desc').value, priority: document.getElementById('t-priority').value, category: document.getElementById('t-cat').value, dueDate: document.getElementById('t-due').value, assignedTo: memSel.value, assignedName: memSel.options[memSel.selectedIndex]?.text||'' });
+  loadTasks();
+}
+
+async function completeTask(id) { await api('/api/tasks/' + id + '/complete', {}); loadTasks(); }
+async function deleteTask(id) { if (!confirm('حذف المهمة؟')) return; await api('/api/tasks/' + id, {}, 'DELETE'); loadTasks(); }
+
+// ═══════════════════════════════════════════════════════
+//  Calendar
+// ═══════════════════════════════════════════════════════
+function buildCalendar() {
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  document.getElementById('cal-month-label').textContent = calDate.toLocaleDateString('ar-SA', { year:'numeric', month:'long' });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const today = new Date().toDateString();
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day other-month"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const ds   = date.toISOString().split('T')[0];
+    const isToday = date.toDateString() === today;
+    const hasEv = allEvents.some(e => e.date === ds);
+    html += `<div class="cal-day ${isToday?'today':''} ${hasEv?'has-event':''}" onclick="selectCalDay('${ds}')">${d}</div>`;
+  }
+  document.getElementById('cal-days').innerHTML = html;
+}
+
+async function loadCalEvents() {
+  const year = calDate.getFullYear(), month = String(calDate.getMonth()+1).padStart(2,'0');
+  const from = `${year}-${month}-01`, to = `${year}-${month}-31`;
+  const data = await api(`/api/events?from=${from}&to=${to}`);
+  allEvents = data || [];
+  buildCalendar();
+  selectCalDay(new Date().toISOString().split('T')[0]);
+}
+
+function selectCalDay(ds) {
+  document.getElementById('cal-selected-date').textContent = 'أحداث ' + new Date(ds).toLocaleDateString('ar-SA', { weekday:'long', day:'numeric', month:'long' });
+  const evs = allEvents.filter(e => e.date === ds);
+  const div = document.getElementById('cal-events-list');
+  div.innerHTML = evs.length ? evs.map(e => `
+    <div class="list-item">
+      <div class="list-item-icon">${e.type==='طبي'?'🏥':e.type==='مدرسي'?'📚':e.type==='ديني'?'🕌':'📍'}</div>
+      <div class="list-item-body"><div class="list-item-title">${e.title}</div><div class="list-item-sub">${e.time||'طوال اليوم'}${e.member_name?' · '+e.member_name:''}${e.location?' · '+e.location:''}</div></div>
+      <button class="btn btn-red btn-icon btn-sm" onclick="deleteEvent(${e.id})">🗑️</button>
+    </div>`).join('') : '<div class="empty"><div class="empty-text">لا أحداث في هذا اليوم</div></div>';
+}
+
+function prevMonth() { calDate.setMonth(calDate.getMonth()-1); loadCalEvents(); }
+function nextMonth() { calDate.setMonth(calDate.getMonth()+1); loadCalEvents(); }
+
+function openAddEvent() { ['ev-title','ev-loc','ev-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ev-date').value=new Date().toISOString().split('T')[0]; document.getElementById('ev-time').value=''; document.getElementById('event-modal').classList.add('open'); }
+function closeEventModal() { document.getElementById('event-modal').classList.remove('open'); }
+
+async function saveEvent() {
+  const title = document.getElementById('ev-title').value.trim(); if (!title) return;
+  const memSel = document.getElementById('ev-member');
+  closeEventModal();
+  await api('/api/events', { title, description: document.getElementById('ev-notes').value, date: document.getElementById('ev-date').value, time: document.getElementById('ev-time').value, type: document.getElementById('ev-type').value, memberId: memSel.value, memberName: memSel.options[memSel.selectedIndex]?.text||'', location: document.getElementById('ev-loc').value });
+  loadCalEvents();
+}
+
+async function deleteEvent(id) { await api('/api/events/' + id, {}, 'DELETE'); loadCalEvents(); }
+
+// ═══════════════════════════════════════════════════════
+//  Health
+// ═══════════════════════════════════════════════════════
+async function loadHealth() { loadMeds(); loadAppts(); }
+
+function showHealthTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('health-meds').style.display  = tab === 'meds'  ? '' : 'none';
+  document.getElementById('health-appts').style.display = tab === 'appts' ? '' : 'none';
+}
+
+async function loadMeds() {
+  const data = await api('/api/medications');
+  const div  = document.getElementById('meds-list');
+  if (!data || !data.length) { div.innerHTML = '<div class="empty"><div class="empty-icon">💊</div><div class="empty-text">لا أدوية مسجلة</div></div>'; return; }
+  div.innerHTML = data.map(m => `
+    <div class="med-card" style="margin-bottom:8px">
+      <div class="med-icon">💊</div>
+      <div style="flex:1"><div style="font-weight:700">${m.name}</div><div style="font-size:12px;color:var(--mut)">${m.member_name} · ${m.dose} · ${m.frequency}</div>${m.end_date?`<div style="font-size:11px;color:var(--org)">حتى ${m.end_date}</div>`:''}</div>
+      <button class="btn btn-red btn-icon btn-sm" onclick="deleteMed(${m.id})">🗑️</button>
+    </div>`).join('');
+}
+
+async function loadAppts() {
+  const data = await api('/api/appointments');
+  const div  = document.getElementById('appts-list');
+  if (!data || !data.length) { div.innerHTML = '<div class="empty"><div class="empty-icon">🗓️</div><div class="empty-text">لا مواعيد قادمة</div></div>'; return; }
+  div.innerHTML = data.map(a => `
+    <div class="list-item">
+      <div class="list-item-icon">🏥</div>
+      <div class="list-item-body"><div class="list-item-title">د. ${a.doctor} — ${a.specialty||'عام'}</div><div class="list-item-sub">${a.member_name} · ${a.date}${a.time?' '+a.time:''}${a.location?' · '+a.location:''}</div></div>
+      <button class="btn btn-grn btn-sm" onclick="doneAppt(${a.id})">تم</button>
+      <button class="btn btn-red btn-icon btn-sm" onclick="deleteAppt(${a.id})">🗑️</button>
+    </div>`).join('');
+}
+
+function openAddMed() { ['med-name','med-dose','med-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('med-start').value=new Date().toISOString().split('T')[0]; document.getElementById('med-end').value=''; document.getElementById('med-modal').classList.add('open'); }
+function closeMedModal() { document.getElementById('med-modal').classList.remove('open'); }
+async function saveMed() {
+  const name = document.getElementById('med-name').value.trim(); if (!name) return;
+  const memSel = document.getElementById('med-member');
+  closeMedModal();
+  await api('/api/medications', { memberId: memSel.value, memberName: memSel.options[memSel.selectedIndex]?.text||'', name, dose: document.getElementById('med-dose').value, frequency: document.getElementById('med-freq').value, startDate: document.getElementById('med-start').value, endDate: document.getElementById('med-end').value, notes: document.getElementById('med-notes').value });
+  loadMeds();
+}
+async function deleteMed(id) { await api('/api/medications/' + id, {}, 'DELETE'); loadMeds(); }
+
+function openAddAppt() { ['appt-doctor','appt-spec','appt-loc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('appt-date').value=new Date().toISOString().split('T')[0]; document.getElementById('appt-time').value=''; document.getElementById('appt-modal').classList.add('open'); }
+function closeApptModal() { document.getElementById('appt-modal').classList.remove('open'); }
+async function saveAppt() {
+  const doc = document.getElementById('appt-doctor').value.trim(); if (!doc) return;
+  const memSel = document.getElementById('appt-member');
+  closeApptModal();
+  await api('/api/appointments', { memberId: memSel.value, memberName: memSel.options[memSel.selectedIndex]?.text||'', doctor: doc, specialty: document.getElementById('appt-spec').value, date: document.getElementById('appt-date').value, time: document.getElementById('appt-time').value, location: document.getElementById('appt-loc').value });
+  loadAppts();
+}
+async function doneAppt(id) { await api('/api/appointments/' + id + '/done', {}); loadAppts(); }
+async function deleteAppt(id) { await api('/api/appointments/' + id, {}, 'DELETE'); loadAppts(); }
+
+// ═══════════════════════════════════════════════════════
+//  School
+// ═══════════════════════════════════════════════════════
+function loadSchoolMembers() {
+  const div = document.getElementById('school-members');
+  const children = allMembers.filter(m => m.relation === 'ابن' || m.relation === 'ابنة' || m.relation === 'ابن/ابنة');
+  if (!children.length) { div.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-text">أضف أبناءك في قسم أفراد العائلة أولاً</div></div>'; return; }
+  div.innerHTML = children.map(m => `
+    <div class="member-card ${selectedSchoolMember==m.id?'selected':''}" onclick="selectSchoolMember(${m.id},'${m.name}')">
+      <div class="member-avatar">${m.avatar||'👦'}</div>
+      <div class="member-name">${m.name}</div>
+      <div class="member-role">${m.relation}</div>
+    </div>`).join('');
+}
+
+async function selectSchoolMember(id, name) {
+  selectedSchoolMember = id;
+  document.getElementById('school-member-name').textContent = '📚 ' + name;
+  document.getElementById('school-detail').style.display = '';
+  loadSchoolMembers();
+  const [grades, acts] = await Promise.all([
+    api('/api/school/' + id),
+    api('/api/activities')
+  ]);
+  // Grades
+  const gd = document.getElementById('grades-list');
+  const grList = (grades||[]);
+  gd.innerHTML = grList.length ? grList.map(g => `
+    <div class="list-item"><div class="list-item-body"><div class="list-item-title">${g.subject}</div><div class="list-item-sub">${g.semester} · ${g.date}</div></div><span style="font-size:18px;font-weight:900;color:var(--pri)">${g.grade}</span></div>`
+  ).join('') : '<div class="empty"><div class="empty-text">لا درجات مسجلة</div></div>';
+  // Activities
+  const ad = document.getElementById('activities-list');
+  const actList = (acts||[]).filter(a => a.member_id == id);
+  ad.innerHTML = actList.length ? actList.map(a => `
+    <div class="list-item"><div class="list-item-icon">⚽</div><div class="list-item-body"><div class="list-item-title">${a.name}</div><div class="list-item-sub">${a.day} ${a.time||''}${a.location?' · '+a.location:''}</div></div><button class="btn btn-red btn-icon btn-sm" onclick="deleteActivity(${a.id})">🗑️</button></div>`
+  ).join('') : '<div class="empty"><div class="empty-text">لا أنشطة</div></div>';
+}
+
+function openAddGrade() {
+  if (!selectedSchoolMember) return;
+  ['gr-subject','gr-grade','gr-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('gr-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('grade-modal').classList.add('open');
+}
+function closeGradeModal() { document.getElementById('grade-modal').classList.remove('open'); }
+async function saveGrade() {
+  const subject = document.getElementById('gr-subject').value.trim(); if (!subject) return;
+  const member = allMembers.find(m => m.id == selectedSchoolMember);
+  closeGradeModal();
+  await api('/api/school', { memberId: selectedSchoolMember, memberName: member?.name||'', subject, grade: document.getElementById('gr-grade').value, semester: document.getElementById('gr-sem').value, date: document.getElementById('gr-date').value, notes: document.getElementById('gr-notes').value });
+  selectSchoolMember(selectedSchoolMember, member?.name||'');
+}
+
+function openAddActivity() {
+  if (!selectedSchoolMember) return;
+  ['act-name','act-loc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('act-fee').value='0'; document.getElementById('act-time').value='';
+  document.getElementById('activity-modal').classList.add('open');
+}
+function closeActivityModal() { document.getElementById('activity-modal').classList.remove('open'); }
+async function saveActivity() {
+  const name = document.getElementById('act-name').value.trim(); if (!name) return;
+  const member = allMembers.find(m => m.id == selectedSchoolMember);
+  closeActivityModal();
+  await api('/api/activities', { memberId: selectedSchoolMember, memberName: member?.name||'', name, day: document.getElementById('act-day').value, time: document.getElementById('act-time').value, location: document.getElementById('act-loc').value, fee: document.getElementById('act-fee').value });
+  selectSchoolMember(selectedSchoolMember, member?.name||'');
+}
+async function deleteActivity(id) { await api('/api/activities/' + id, {}, 'DELETE'); selectSchoolMember(selectedSchoolMember, ''); }
+
+// ═══════════════════════════════════════════════════════
+//  Documents
+// ═══════════════════════════════════════════════════════
+let allDocs = [];
+async function loadDocuments() {
+  const data = await api('/api/documents');
+  allDocs = data || [];
+  renderDocs(allDocs);
+}
+
+function renderDocs(docs) {
+  const div = document.getElementById('docs-grid');
+  if (!docs.length) { div.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📝</div><div class="empty-text">لا وثائق</div></div>'; return; }
+  div.innerHTML = docs.map(d => `
+    <div class="card-sm" style="cursor:default">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span class="badge badge-pri">${d.type}</span>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="editDoc(${d.id})">✏️</button>
+          <button class="btn btn-red btn-icon btn-sm" onclick="deleteDoc(${d.id})">🗑️</button>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">${d.title}</div>
+      <div style="font-size:12px;color:var(--mut);margin-bottom:8px;line-height:1.5">${(d.content||'').substring(0,100)}${d.content?.length>100?'...':''}</div>
+      ${d.member_name?`<div style="font-size:11px;color:var(--sub)">👤 ${d.member_name}</div>`:''}
+      ${d.tags?`<div style="margin-top:6px">${d.tags.split(',').map(t=>`<span class="badge" style="background:var(--bor);font-size:10px;margin-left:2px">${t.trim()}</span>`).join('')}</div>`:''}
+    </div>`).join('');
+}
+
+function filterDocs() {
+  const q    = document.getElementById('doc-search').value.toLowerCase();
+  const type = document.getElementById('doc-type-filter').value;
+  renderDocs(allDocs.filter(d =>
+    (!q || d.title.toLowerCase().includes(q) || (d.content||'').toLowerCase().includes(q)) &&
+    (!type || d.type === type)
+  ));
+}
+
+function openAddDoc() { editingDoc = null; document.getElementById('doc-modal-title').textContent = 'وثيقة جديدة'; ['doc-title','doc-content','doc-tags'].forEach(id=>document.getElementById(id).value=''); document.getElementById('doc-modal').classList.add('open'); }
+function editDoc(id) {
+  const d = allDocs.find(x => x.id == id); if (!d) return;
+  editingDoc = id;
+  document.getElementById('doc-modal-title').textContent = 'تعديل: ' + d.title;
+  document.getElementById('doc-title').value   = d.title;
+  document.getElementById('doc-type').value    = d.type;
+  document.getElementById('doc-content').value = d.content;
+  document.getElementById('doc-tags').value    = d.tags;
+  document.getElementById('doc-modal').classList.add('open');
+}
+function closeDocModal() { document.getElementById('doc-modal').classList.remove('open'); editingDoc = null; }
+
+async function saveDoc() {
+  const title = document.getElementById('doc-title').value.trim(); if (!title) return;
+  const memSel = document.getElementById('doc-member');
+  closeDocModal();
+  const body = { title, type: document.getElementById('doc-type').value, content: document.getElementById('doc-content').value, memberId: memSel.value, memberName: memSel.options[memSel.selectedIndex]?.text||'', tags: document.getElementById('doc-tags').value };
+  const r = editingDoc ? await api('/api/documents/' + editingDoc, body, 'PUT') : await api('/api/documents', body);
+  if (r.error) { notify(r.error, true); return; }
+  notify('تم الحفظ ✓'); loadDocuments();
+}
+
+async function deleteDoc(id) { if (!confirm('حذف الوثيقة؟')) return; await api('/api/documents/' + id, {}, 'DELETE'); loadDocuments(); }
+
+// ═══════════════════════════════════════════════════════
+//  Settings
+// ═══════════════════════════════════════════════════════
+async function loadSettings() {
+  if (ME.role === 'admin') {
+    const data = await api('/api/users');
+    const div  = document.getElementById('users-list');
+    div.innerHTML = (data||[]).map(u => `
+      <div class="list-item">
+        <div class="list-item-body"><div class="list-item-title">${u.name} (${u.username})</div><div class="list-item-sub">${u.role}</div></div>
+        ${u.username!=='admin'?`<button class="btn btn-red btn-icon btn-sm" onclick="deleteUser('${u.username}')">🗑️</button>`:''}
+      </div>`).join('');
+  }
+}
+
+async function saveTg() { const id = document.getElementById('my-tg').value.trim(); if (!id) return; const r = await api('/api/users/me/telegram', { chatId: id }); if (r.error) notify(r.error, true); else notify('تم ✓'); }
+async function changePass() { const o = document.getElementById('new-p1').value, n = document.getElementById('new-p2').value; if (!o||!n) return notify('أدخل كلمتي المرور', true); const r = await api('/api/users/me/password', { oldPass: o, newPass: n }); if (r.error) notify(r.error, true); else { notify('تم التغيير ✓'); document.getElementById('new-p1').value = document.getElementById('new-p2').value = ''; } }
+function openAddUser() { ['u-username','u-password','u-name'].forEach(id=>document.getElementById(id).value=''); document.getElementById('user-modal').classList.add('open'); }
+function closeUserModal() { document.getElementById('user-modal').classList.remove('open'); }
+async function saveUser() { const u = document.getElementById('u-username').value.trim(), p = document.getElementById('u-password').value; if (!u||!p) return notify('البيانات مطلوبة', true); closeUserModal(); const r = await api('/api/users', { username: u, password: p, name: document.getElementById('u-name').value, role: document.getElementById('u-role').value }); if (r.error) notify(r.error, true); else { notify('تمت الإضافة ✓'); loadSettings(); } }
+async function deleteUser(u) { if (!confirm('حذف ' + u + '؟')) return; await api('/api/users/' + u, {}, 'DELETE'); loadSettings(); }
+
+// ═══════════════════════════════════════════════════════
+//  Notify
+// ═══════════════════════════════════════════════════════
+function notify(msg, err=false) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'show' + (err ? ' err' : ' ok');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// PWA
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
