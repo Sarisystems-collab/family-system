@@ -856,7 +856,7 @@ label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px;font-weigh
 // ═══════════════════════════════════════════════════════
 //  Config — غيّر الرابط لـ Render
 // ═══════════════════════════════════════════════════════
-const API_URL ='https://family-system.onrender.com';
+const API_URL = 'https://family-system.onrender.com';
 
 async function api(path, body, method) {
   const m = method || (body !== undefined && body !== null ? 'POST' : 'GET');
@@ -874,6 +874,13 @@ async function api(path, body, method) {
 //  State
 // ═══════════════════════════════════════════════════════
 let TOKEN = null, ME = null;
+
+// تاريخ محلي بدون تحويل UTC
+function localDate(d) {
+  const dt = d || new Date();
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+}
+
 let allMembers = [], allRecipes = [], allBudgetCats = [], allTasks = [], allEvents = [];
 let currentWeek = new Date(), calDate = new Date(), selectedSchoolMember = null;
 let editingDoc = null, editingMember = null;
@@ -925,7 +932,7 @@ async function initApp() {
   document.getElementById('dash-user-name').textContent = ME.name;
   if (ME.role === 'admin') document.getElementById('admin-section').style.display = '';
   // Set month input
-  document.getElementById('fin-month').value = new Date().toISOString().substring(0, 7);
+  document.getElementById('fin-month').value = localDate().substring(0, 7);
   // Load base data
   await Promise.all([loadMembers(), loadRecipes(), loadBudgetCats()]);
   loadDashboard();
@@ -1203,20 +1210,20 @@ function getWeekStart(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.
 async function loadMealPlanner() {
   const weekStart = getWeekStart(currentWeek);
   const weekEnd   = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
-  const ws = weekStart.toISOString().split('T')[0];
-  const we = weekEnd.toISOString().split('T')[0];
+  const ws = localDate(weekStart);
+  const we = localDate(weekEnd);
   document.getElementById('week-label').textContent = ws + ' ← ' + we;
   const data = await api('/api/meals?week=' + ws);
   const mealMap = {};
   (data || []).forEach(m => { mealMap[m.date + '_' + m.meal_type] = m; });
   const days = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
   const meals = ['فطور','غداء','عشاء'];
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   let html = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">
     <thead><tr><th style="padding:10px;color:var(--mut);font-size:12px;text-align:right">الوجبة</th>`;
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart); d.setDate(d.getDate() + i);
-    const ds = d.toISOString().split('T')[0];
+    const ds = localDate(d);
     html += `<th style="padding:10px;font-size:12px;${ds===today?'color:var(--pri);':''}">${days[d.getDay()]}<br><span style="font-weight:400;color:var(--mut)">${d.getDate()}/${d.getMonth()+1}</span></th>`;
   }
   html += '</tr></thead><tbody>';
@@ -1224,7 +1231,7 @@ async function loadMealPlanner() {
     html += `<tr><td style="padding:10px;font-size:13px;font-weight:700;color:var(--mut)">${meal}</td>`;
     for (let i = 0; i < 7; i++) {
       const d = new Date(weekStart); d.setDate(d.getDate() + i);
-      const ds = d.toISOString().split('T')[0];
+      const ds = localDate(d);
       const key = ds + '_' + meal;
       const entry = mealMap[key];
       const label = entry ? (entry.recipe_name || entry.custom) : '';
@@ -1351,8 +1358,8 @@ async function loadFinance() {
   ).join('') : '<div class="empty"><div class="empty-text">لا دخل مسجل</div></div>';
 }
 
-function openAddExpense() { document.getElementById('exp-amount').value=''; document.getElementById('exp-desc').value=''; document.getElementById('exp-date').value=new Date().toISOString().split('T')[0]; document.getElementById('exp-modal-title').textContent='💸 إضافة مصروف'; document.getElementById('expense-modal').classList.add('open'); }
-function openAddIncome()  { document.getElementById('inc-amount').value=''; document.getElementById('inc-source').value=''; document.getElementById('inc-date').value=new Date().toISOString().split('T')[0]; document.getElementById('income-modal').classList.add('open'); }
+function openAddExpense() { document.getElementById('exp-amount').value=''; document.getElementById('exp-desc').value=''; document.getElementById('exp-date').value=localDate(); document.getElementById('exp-modal-title').textContent='💸 إضافة مصروف'; document.getElementById('expense-modal').classList.add('open'); }
+function openAddIncome()  { document.getElementById('inc-amount').value=''; document.getElementById('inc-source').value=''; document.getElementById('inc-date').value=localDate(); document.getElementById('income-modal').classList.add('open'); }
 function closeExpModal()  { document.getElementById('expense-modal').classList.remove('open'); }
 function closeIncModal()  { document.getElementById('income-modal').classList.remove('open'); }
 
@@ -1434,7 +1441,7 @@ function buildCalendar() {
   for (let i = 0; i < firstDay; i++) html += '<div class="cal-day other-month"></div>';
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
-    const ds   = date.toISOString().split('T')[0];
+    const ds   = localDate(date);
     const isToday = date.toDateString() === today;
     const hasEv = allEvents.some(e => e.date === ds);
     html += `<div class="cal-day ${isToday?'today':''} ${hasEv?'has-event':''}" onclick="selectCalDay('${ds}')">${d}</div>`;
@@ -1448,11 +1455,11 @@ async function loadCalEvents() {
   const data = await api(`/api/events?from=${from}&to=${to}`);
   allEvents = data || [];
   buildCalendar();
-  selectCalDay(new Date().toISOString().split('T')[0]);
+  selectCalDay(localDate());
 }
 
 function selectCalDay(ds) {
-  document.getElementById('cal-selected-date').textContent = 'أحداث ' + new Date(ds).toLocaleDateString('ar-SA', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('cal-selected-date').textContent = 'أحداث ' + new Date(ds + 'T12:00:00').toLocaleDateString('ar-SA', { weekday:'long', day:'numeric', month:'long' });
   const evs = allEvents.filter(e => e.date === ds);
   const div = document.getElementById('cal-events-list');
   div.innerHTML = evs.length ? evs.map(e => `
@@ -1466,7 +1473,7 @@ function selectCalDay(ds) {
 function prevMonth() { calDate.setMonth(calDate.getMonth()-1); loadCalEvents(); }
 function nextMonth() { calDate.setMonth(calDate.getMonth()+1); loadCalEvents(); }
 
-function openAddEvent() { ['ev-title','ev-loc','ev-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ev-date').value=new Date().toISOString().split('T')[0]; document.getElementById('ev-time').value=''; document.getElementById('event-modal').classList.add('open'); }
+function openAddEvent() { ['ev-title','ev-loc','ev-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ev-date').value=localDate(); document.getElementById('ev-time').value=''; document.getElementById('event-modal').classList.add('open'); }
 function closeEventModal() { document.getElementById('event-modal').classList.remove('open'); }
 
 async function saveEvent() {
@@ -1516,7 +1523,7 @@ async function loadAppts() {
     </div>`).join('');
 }
 
-function openAddMed() { ['med-name','med-dose','med-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('med-start').value=new Date().toISOString().split('T')[0]; document.getElementById('med-end').value=''; document.getElementById('med-modal').classList.add('open'); }
+function openAddMed() { ['med-name','med-dose','med-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('med-start').value=localDate(); document.getElementById('med-end').value=''; document.getElementById('med-modal').classList.add('open'); }
 function closeMedModal() { document.getElementById('med-modal').classList.remove('open'); }
 async function saveMed() {
   const name = document.getElementById('med-name').value.trim(); if (!name) return;
@@ -1527,7 +1534,7 @@ async function saveMed() {
 }
 async function deleteMed(id) { await api('/api/medications/' + id, {}, 'DELETE'); loadMeds(); }
 
-function openAddAppt() { ['appt-doctor','appt-spec','appt-loc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('appt-date').value=new Date().toISOString().split('T')[0]; document.getElementById('appt-time').value=''; document.getElementById('appt-modal').classList.add('open'); }
+function openAddAppt() { ['appt-doctor','appt-spec','appt-loc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('appt-date').value=localDate(); document.getElementById('appt-time').value=''; document.getElementById('appt-modal').classList.add('open'); }
 function closeApptModal() { document.getElementById('appt-modal').classList.remove('open'); }
 async function saveAppt() {
   const doc = document.getElementById('appt-doctor').value.trim(); if (!doc) return;
@@ -1580,7 +1587,7 @@ async function selectSchoolMember(id, name) {
 function openAddGrade() {
   if (!selectedSchoolMember) return;
   ['gr-subject','gr-grade','gr-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('gr-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('gr-date').value = localDate();
   document.getElementById('grade-modal').classList.add('open');
 }
 function closeGradeModal() { document.getElementById('grade-modal').classList.remove('open'); }
